@@ -1,3 +1,5 @@
+"""Antarmuka Tkinter: menu di kiri, form + hasil di kanan, panel COMMAND di bawah.
+Perintah berat dijalankan di thread terpisah supaya jendela tidak membeku."""
 import threading
 import time
 import tkinter as tk
@@ -12,7 +14,7 @@ class Aplikasi:
         self.folder_data = folder_data
         self.mesin = None
         self.sibuk = True
-        self.menu_aktif = None
+        self.menu_aktif = None          # indeks pada MENU
         self.vars = []
         self._hasil = None
         self._nomor = 0
@@ -34,6 +36,7 @@ class Aplikasi:
 
         self._jalankan_thread(self._muat_awal, self._selesai_muat)
 
+    # ------------------------------------------------------------ layout
     def _bangun_menu(self):
         kiri = ttk.Frame(self.root, padding=(6, 6, 3, 3))
         kiri.grid(row=0, column=0, sticky="ns")
@@ -97,6 +100,7 @@ class Aplikasi:
         self.log.grid(row=0, column=0, sticky="nsew")
         sy.grid(row=0, column=1, sticky="ns")
 
+    # ------------------------------------------------------------ thread helper
     def _jalankan_thread(self, kerja, selesai):
         self.sibuk = True
         self._hasil = None
@@ -122,6 +126,7 @@ class Aplikasi:
         self.status.set(self.mesin.ringkas_muat())
         self._atur_tombol()
 
+    # ------------------------------------------------------------ menu & form
     def _pilih_menu(self, _event=None):
         sel = self.pohon.selection()
         if not sel or sel[0][0] != "m":
@@ -158,6 +163,7 @@ class Aplikasi:
         self.teks.insert("1.0", teks)
         self.teks.configure(state="disabled")
 
+    # ------------------------------------------------------------ eksekusi
     def _jalankan(self):
         if self.sibuk or self.menu_aktif is None:
             return

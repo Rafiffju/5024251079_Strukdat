@@ -1,3 +1,6 @@
+"""Mesin perintah: menjembatani UI <-> backend. TIDAK memakai Tkinter, jadi bisa diuji
+tanpa layar. Mengikuti aturan proyek: tanpa dict/set; tabel menu berupa tuple-of-tuple
+dan dicari dengan if/elif."""
 import os
 import time
 
@@ -13,6 +16,7 @@ _F_PESANAN = (("pelanggan", "Pelanggan Baru", ()), ("resto", "kantin-pusat", ())
               ("menu", "nasi-goreng", ()), ("harga", "15000", ()))
 _F_I = (("indeks i", "0", ()),)
 
+# (grup, judul menu, kunci perintah, parameter)  parameter = (label, default, pilihan)
 MENU = (
     (M1, "ARRAY - LIHAT PESANAN", "array_lihat", _F_I),
     (M1, "ARRAY - TAMBAH PESANAN REGULER", "array_reguler", _F_PESANAN),
@@ -78,6 +82,7 @@ class Mesin:
         self.folder = folder_data
         self.muat()
 
+    # ------------------------------------------------------------------
     def muat(self):
         t0 = time.perf_counter()
         self.arr = baca_pesanan(os.path.join(self.folder, "pesanan.csv"))
@@ -114,6 +119,7 @@ class Mesin:
         return (self._oid_baru(), nama, nilai[1].strip(), nilai[2].strip(), harga,
                 prioritas, masuk, BELUM_SELESAI, "ANTRE")
 
+    # hook ORDER (undo/redo) -> M1: kedua struktur diubah serempak
     def _order_tambah(self, baris):
         self.arr.tambah_reguler(baris)
         self.ll.tambah_reguler(baris)
@@ -126,7 +132,9 @@ class Mesin:
         if n > 0 and self.ll.get(n - 1)[K_OID] == baris[K_OID]:
             self.ll.hapus(n - 1)
 
+    # ------------------------------------------------------------------
     def jalankan(self, kunci, nilai):
+        """Mengembalikan (teks hasil, label modul, durasi detik)."""
         try:
             return self._jalankan(kunci, nilai)
         except DataTerlaluBesar as e:
@@ -135,6 +143,7 @@ class Mesin:
             return "GALAT: %s" % e, "galat", 0.0
 
     def _jalankan(self, kunci, v):
+        # ---------------- M1 ----------------
         if kunci == "array_lihat" or kunci == "ll_lihat":
             struktur = self.arr if kunci == "array_lihat" else self.ll
             i = _ke_int(v[0], "indeks", 0)
@@ -189,6 +198,7 @@ class Mesin:
             info = self.muat()
             return "Data dimuat ulang.\n" + self.ringkas_muat(), "M1 - data", info[1] + info[2]
 
+        # ---------------- M2 ----------------
         if kunci == "stack_postfix":
             t0 = time.perf_counter()
             post, l1 = ke_postfix_detail(v[0])
@@ -286,6 +296,7 @@ class Mesin:
                 tt += "  %d. %s\n" % (i + 1, h.get(i))
             return tt.rstrip(), "M2 - stats", dt
 
+        # ---------------- M3 ----------------
         if kunci == "sort_insertion" or kunci == "sort_merge":
             n = _ke_int(v[0], "jumlah baris", 1)
             algo = "insertion" if kunci == "sort_insertion" else "merge"
